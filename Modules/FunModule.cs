@@ -3,14 +3,13 @@ using Discord;
 using Discord.Commands;
 using GiphyDotNet.Manager;
 using GiphyDotNet.Model.Parameters;
+using KSoftDotNet.Manager;
 using Newtonsoft.Json.Linq;
 using Radon.Core;
 using Radon.Services;
-using Radon.Services.External;
 using System;
 using System.Linq;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using System.Web;
 #endregion
@@ -24,18 +23,20 @@ namespace Radon.Modules
         private readonly Giphy _giphy;
         private readonly HttpClient _httpClient;
         private readonly Random _random;
+        private readonly KSoft _kSoft;
 
-        public FunModule(HttpClient http, Random random, Configuration configuration, Giphy giphy)
+        public FunModule(HttpClient http, Random random, Configuration configuration, Giphy giphy, KSoft kSoft)
         {
             _httpClient = http;
             _random = random;
             _configuration = configuration;
             _giphy = giphy;
+            _kSoft = kSoft;
         }
 
         [Command("dog")]
         [Alias("woof")]
-        [Summary("Returns a random dog image")]
+        [Summary("Gets you a dog")]
         public async Task DogAsync()
         {
             string url;
@@ -51,7 +52,7 @@ namespace Radon.Modules
         }
         [Command("Cat")]
         [Alias("kitty")]
-        [Summary("Returns a random cat image")]
+        [Summary("Gets you a cat")]
         public async Task CatAsync()
         {
             _httpClient.DefaultRequestHeaders.Add("x-api-key", _configuration.CatApiKey);
@@ -62,7 +63,7 @@ namespace Radon.Modules
             await ReplyEmbedAsync(embed);
         }
         [Command("fox")]
-        [Summary("Returns a random fox image")]
+        [Summary("Gets you a random fox")]
         public async Task FoxAsync()
         {
             string url = $"{JObject.Parse(await _httpClient.GetStringAsync("https://randomfox.ca/floof/"))["image"]}";
@@ -74,7 +75,7 @@ namespace Radon.Modules
         }
 
         [Command("8ball")]
-        [Summary("8Ball will answer your question!")]
+        [Summary("Ask a question and the 8 ball will answer")]
         public async Task EightballAsync([Remainder] string question)
         {
             JObject data = JObject.Parse(await _httpClient.GetStringAsync("https://nekos.life/api/v2/8ball"));
@@ -88,7 +89,7 @@ namespace Radon.Modules
         }
 
         [Command("joke")]
-        [Summary("Tells a random joke :p")]
+        [Summary("Tells a joke")]
         public async Task JokeAsync()
         {
             string joke = $"{JObject.Parse(await _httpClient.GetStringAsync("http://api.yomomma.info/"))["joke"]}";
@@ -99,34 +100,36 @@ namespace Radon.Modules
         [Summary("Returns a lenny ( ͡° ͜ʖ ͡°)")]
         public async Task LennyAsync()
         {
-            string[] lennys = new[]
-            {
-                "( ͡° ͜ʖ ͡°)", "(☭ ͜ʖ ☭)", "(ᴗ ͜ʖ ᴗ)", "( ° ͜ʖ °)", "( ͡◉ ͜ʖ ͡◉)", "( ͡☉ ͜ʖ ͡☉)", "( ͡° ͜ʖ ͡°)>⌐■-■",
-                "<:::::[]=¤ (▀̿̿Ĺ̯̿̿▀̿ ̿)", "( ͡ಥ ͜ʖ ͡ಥ)", "( ͡º ͜ʖ ͡º )", "( ͡ಠ ʖ̯ ͡ಠ)", "ᕦ( ͡°╭͜ʖ╮͡° )ᕤ", "( ♥ ͜ʖ ♥)",
-                "(つ ♡ ͜ʖ ♡)つ", "✩°｡⋆⸜(▀̿Ĺ̯▀̿ ̿)", "⤜(ʘ_ʘ)⤏", "¯\\_ツ_/¯", "ಠ_ಠ", "ʢ◉ᴥ◉ʡ", "^‿^", "(づ◔ ͜ʖ◔)づ", "⤜(ʘ_ʘ)⤏",
-                "☞   ͜ʖ  ☞", "ᗒ ͟ʖᗕ", "/͠-. ͝-\\", "(´• ᴥ •`)", "(╯￢ ᗝ￢ ）╯︵ ┻━┻", "ᕦ(・ᨎ・)ᕥ", "◕ ε ◕", "【$ ³$】",
-                "(╭☞T ε T)╭☞"
-            };
-            await ReplyAsync(lennys[_random.Next(lennys.Length)]);
+            JArray data = JArray.Parse(await _httpClient.GetStringAsync($"https://api.lenny.today/v1/random"));
+            EmbedBuilder embed = new EmbedBuilder()
+                .WithImageUrl(data[0]["face"].ToString());
+            await ReplyEmbedAsync(embed);
         }
+        //public async Task LennyAsync()
+        //{
+        //    string[] lennys = new[]
+        //    {
+        //        "( ͡° ͜ʖ ͡°)", "(☭ ͜ʖ ☭)", "(ᴗ ͜ʖ ᴗ)", "( ° ͜ʖ °)", "( ͡◉ ͜ʖ ͡◉)", "( ͡☉ ͜ʖ ͡☉)", "( ͡° ͜ʖ ͡°)>⌐■-■",
+        //        "<:::::[]=¤ (▀̿̿Ĺ̯̿̿▀̿ ̿)", "( ͡ಥ ͜ʖ ͡ಥ)", "( ͡º ͜ʖ ͡º )", "( ͡ಠ ʖ̯ ͡ಠ)", "ᕦ( ͡°╭͜ʖ╮͡° )ᕤ", "( ♥ ͜ʖ ♥)",
+        //        "(つ ♡ ͜ʖ ♡)つ", "✩°｡⋆⸜(▀̿Ĺ̯▀̿ ̿)", "⤜(ʘ_ʘ)⤏", "¯\\_ツ_/¯", "ಠ_ಠ", "ʢ◉ᴥ◉ʡ", "^‿^", "(づ◔ ͜ʖ◔)づ", "⤜(ʘ_ʘ)⤏",
+        //        "☞   ͜ʖ  ☞", "ᗒ ͟ʖᗕ", "/͠-. ͝-\\", "(´• ᴥ •`)", "(╯￢ ᗝ￢ ）╯︵ ┻━┻", "ᕦ(・ᨎ・)ᕥ", "◕ ε ◕", "【$ ³$】",
+        //        "(╭☞T ε T)╭☞"
+        //    };
+        //    await ReplyAsync(lennys[_random.Next(lennys.Length)]);
+        //}
 
         [Command("meme")]
-        [Summary("Returns a meme")]
+        [Summary("Gets a meme")]
         public async Task MemeAsync()
         {
-            _httpClient.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Token", $"{_configuration.KsoftApiKey}");
-            JObject data;
-            do
-            {
-                data = JObject.Parse(await _httpClient.GetStringAsync("https://api.ksoft.si/meme/random-meme"));
-            } while (data.Value<bool>("nsfw"));
+            var data = await _kSoft.GetRandomMeme();
 
             EmbedBuilder embed = new EmbedBuilder()
-                .WithTitle($"{data["title"]}")
-                .WithUrl($"{data["source"]}")
-                .WithImageUrl($"{data["image_url"]}");
-
+                .WithTitle($"{data.Title}")
+                .WithUrl($"{data.Source}")
+                .WithImageUrl($"{data.ImageUrl}")
+                .WithFooter($"{Context.Message.Author.Username} | KSoft.Si API")
+                .WithTimestamp(Formatter.UnixToDateTime((long)data.CreatedAt));
             await ReplyEmbedAsync(embed);
 
             _httpClient.DefaultRequestHeaders.Authorization = null;
@@ -134,23 +137,16 @@ namespace Radon.Modules
 
         [Command("wikihow")]
         [Alias("wh")]
-        [Summary("Returns random wikihow image")]
+        [Summary("Gets a wikihow article")]
         public async Task WikiHowAsync()
         {
-            _httpClient.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Token", $"{_configuration.KsoftApiKey}");
-            JObject data;
-
-            data = JObject.Parse(await _httpClient.GetStringAsync("https://api.ksoft.si/meme/random-wikihow"));
-
+            var wh = _kSoft.GetRandomWikihow().Result;
             EmbedBuilder embed = new EmbedBuilder()
-                .WithTitle($"{data["title"]}")
-                .WithUrl($"{data["article_url"]}")
-                .WithImageUrl($"{data["url"]}");
-
+                .WithTitle($"{wh.Title}")
+                .WithUrl($"{wh.ArticleUrl}")
+                .WithImageUrl($"{wh.Url}")
+                .WithFooter($"{Context.Message.Author.Username} | KSoft.Si API");
             await ReplyEmbedAsync(embed);
-
-            _httpClient.DefaultRequestHeaders.Authorization = null;
         }
 
         [Command("out")]
@@ -183,55 +179,36 @@ namespace Radon.Modules
         [Summary("Returns random image from r/aww")]
         public async Task AwwAsync()
         {
-            _httpClient.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Token", $"{_configuration.KsoftApiKey}");
-            JObject data;
-
-            data = JObject.Parse(await _httpClient.GetStringAsync("https://api.ksoft.si/meme/random-aww"));
-
+            var aww = _kSoft.GetRandomAww().Result;
             EmbedBuilder embed = new EmbedBuilder()
-                .WithTitle($"{data["subreddit"]} | {data["title"]}")
-                .WithUrl($"{data["source"]}")
-                .WithImageUrl($"{data["image_url"]}")
-                .WithFooter($"<:upvote:486361126658113536> {data["upvotes"]} | <:downvote:486361126641205268> {data["downvotes"]}");
-
+                .WithTitle($"{aww.Subreddit} | {aww.Title}")
+                .WithUrl($"{aww.Source}")
+                .WithImageUrl($"{aww.ImageUrl}")
+                .WithDescription($"<:upvote:486361126658113536> {aww.Upvotes} | <:downvote:486361126641205268> {aww.Downvotes}")
+                .WithFooter($"{Context.Message.Author.Username} | KSoft.Si API")
+                .WithTimestamp(Formatter.UnixToDateTime((long)aww.CreatedAt));
             await ReplyEmbedAsync(embed);
-
-            _httpClient.DefaultRequestHeaders.Authorization = null;
         }
 
         [Command("subreddit")]
         [Alias("reddit", "sub", "r", "r/", "sr", "sreddit")]
-        [Summary("Returns random image from specified subreddit")]
+        [Summary("Gets a post from a subreddit")]
         public async Task SubredditAsync(string subreddit)
         {
-            try
-            {
-                _httpClient.DefaultRequestHeaders.Authorization =
-                    new AuthenticationHeaderValue("Token", $"{_configuration.KsoftApiKey}");
-                JObject data;
-
-                data = JObject.Parse(await _httpClient.GetStringAsync($"https://api.ksoft.si/meme/rand-reddit/{subreddit}"));
-
-                EmbedBuilder embed = new EmbedBuilder()
-                    .WithTitle($"{data["subreddit"]} | {data["title"]}")
-                    .WithUrl($"{data["source"]}")
-                    .WithImageUrl($"{data["image_url"]}")
-                    .WithFooter($"<:upvote:486361126658113536> {data["upvotes"]} | <:downvote:486361126641205268> {data["downvotes"]}");
-
-                await ReplyEmbedAsync(embed);
-
-                _httpClient.DefaultRequestHeaders.Authorization = null;
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-            }
+            var post = _kSoft.GetRandomSubredditImage().Result;
+            EmbedBuilder embed = new EmbedBuilder()
+                .WithTitle($"{post.Subreddit} | {post.Title}")
+                .WithUrl($"{post.Source}")
+                .WithImageUrl($"{post.ImageUrl}")
+                .WithDescription($"<:upvote:486361126658113536> {post.Upvotes} | <:downvote:486361126641205268> {post.Downvotes}")
+                .WithFooter($"{Context.Message.Author.Username} | KSoft.Si API")
+                .WithTimestamp(Formatter.UnixToDateTime((long)post.CreatedAt));
+            await ReplyEmbedAsync(embed);
         }
 
         [Command("rip")]
         [Alias("tombstone")]
-        [Summary("Sends a tombstone with a custom text")]
+        [Summary("Gets a tombstone with a custom text")]
         public async Task RipAsync([Remainder] string text)
         {
             string url = "http://tombstonebuilder.com/generate.php" +
@@ -244,7 +221,7 @@ namespace Radon.Modules
 
         [Command("sign")]
         [Alias("roadsign")]
-        [Summary("Sends a roadsign with a custom text")]
+        [Summary("Gets a roadsign with a custom text")]
         public async Task SignAsync([Remainder] string text)
         {
             string url = $"http://www.customroadsign.com/generate.php" +
@@ -265,17 +242,16 @@ namespace Radon.Modules
         }
 
         [Command("ascii")]
-        [Summary("Converts text to the ascii format")]
+        [Summary("Converts text to ascii art")]
         public async Task AsciiAsync([Remainder] string text)
         {
-            await ReplyAsync(
-                $"{await _httpClient.GetStringAsync($"http://artii.herokuapp.com/make?text={text}")}".BlockCode());
+            await ReplyAsync($"{await _httpClient.GetStringAsync($"http://artii.herokuapp.com/make?text={text}")}".BlockCode());
         }
 
         [Group("gif")]
         [Alias("giphy", "g")]
         [CommandCategory(CommandCategory.Fun)]
-        [Summary("Sends a random gif or one with your tag")]
+        [Summary("Gets a gif")]
         public class GiphyModule : CommandBase
         {
             private readonly Giphy _giphy;
@@ -288,7 +264,7 @@ namespace Radon.Modules
             }
 
             [Command("")]
-            [Summary("Sends a random gif")]
+            [Summary("Gets a random gif")]
             [Priority(-1)]
             public async Task GifAsync()
             {
@@ -300,53 +276,24 @@ namespace Radon.Modules
             }
 
             [Command("")]
-            [Summary("Searches a gif from your query")]
+            [Summary("Searches for your gif")]
             [Priority(-1)]
             public async Task GifAsync([Remainder] string query)
             {
                 GiphyDotNet.Model.Results.GiphySearchResult gif = await _giphy.GifSearch(new SearchParameter { Query = query });
                 EmbedBuilder embed = new EmbedBuilder();
                 if (!gif.Data.Any())
+                {
                     embed.WithTitle("No gif found")
                         .WithDescription($"Couldn't find any gif for {query.InlineCode()}");
+                }
                 else
+                {
                     embed.WithImageUrl(gif.Data[_random.Next(gif.Data.Length)].Images.Original.Url);
+                }
 
                 await ReplyEmbedAsync(embed);
             }
-        }
-        [Command("clyde")]
-        [Summary("Clyde-ifes text")]
-        public async Task ClydeAsync([Remainder] string text)
-        {
-            string link = $"{JObject.Parse(await _httpClient.GetStringAsync($"https://nekobot.xyz/api/imagegen?type=clyde&text={ text }"))["message"]}";
-            EmbedBuilder embed = new EmbedBuilder()
-               .WithImageUrl(link);
-            await ReplyEmbedAsync(embed: embed);
-        }
-        [Command("ship")]
-        [Summary("Ships two people")]
-        public async Task ShipAsync(IUser user2 = null, IUser user1 = null)
-        {
-            if (user1 == null)
-                user1 = Context.Message.Author;
-            if (user2 == null)
-                await ReplyEmbedAsync(NormalizeEmbed("Error", "You must provide a target user"));
-
-            string link = $"{JObject.Parse(await _httpClient.GetStringAsync($"https://nekobot.xyz/api/imagegen?type=ship&user1={user1.GetAvatarUrl().ToString()}&user2={user2.GetAvatarUrl().ToString()}"))["message"]}";
-            EmbedBuilder embed = new EmbedBuilder()
-               .WithImageUrl(link.ToString());
-            await ReplyEmbedAsync(embed: embed);
-        }
-        [Command("kannagen")]
-        [Alias("kanna", "kg")]
-        [Summary("Kannafies text")]
-        public async Task KannaAsync([Remainder]string text)
-        {
-            string link = $"{JObject.Parse(await _httpClient.GetStringAsync($"https://nekobot.xyz/api/imagegen?type=kannagen&text={ text }"))["message"]}";
-            EmbedBuilder embed = new EmbedBuilder()
-               .WithImageUrl(link);
-            await ReplyEmbedAsync(embed: embed);
         }
     }
 }

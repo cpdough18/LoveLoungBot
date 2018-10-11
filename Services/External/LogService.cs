@@ -50,14 +50,25 @@ namespace Radon.Services
             Server server = null;
             _database.Execute(x => { server = x.Load<Server>($"{user.Guild.Id}"); });
             var role = user.Guild.GetRole(server.AutoroleId.GetValueOrDefault());
-            if (role == null) return;
+            if (role == null)
+            {
+                return;
+            }
+
             await user.AddRoleAsync(role);
         }
 
         private async Task UserUnbanned(SocketUser arg1, SocketGuild guild)
         {
-            if (!(arg1 is SocketGuildUser user)) return;
-            if (!GetAuditLogEntry(guild, out var auditLog, Discord.ActionType.Unban)) return;
+            if (!(arg1 is SocketGuildUser user))
+            {
+                return;
+            }
+
+            if (!GetAuditLogEntry(guild, out var auditLog, Discord.ActionType.Unban))
+            {
+                return;
+            }
 
             var logItem = _service.AddLogItem(guild, ActionType.Unban, auditLog.Reason, auditLog.User.Id, user.Id);
 
@@ -69,11 +80,21 @@ namespace Radon.Services
         {
             Server server = null;
             _database.Execute(x => { server = x.Load<Server>($"{user.Guild.Id}"); });
-            if (!server.GetSetting(Setting.LeaveMessage)) return;
+            if (!server.GetSetting(Setting.LeaveMessage))
+            {
+                return;
+            }
 
-            if (!server.AnnounceChannelId.HasValue) return;
+            if (!server.AnnounceChannelId.HasValue)
+            {
+                return;
+            }
+
             var channel = user.Guild.GetTextChannel(server.AnnounceChannelId.Value);
-            if (channel == null) return;
+            if (channel == null)
+            {
+                return;
+            }
 
             var message = server.LeaveMessages.Any()
                 ? server.LeaveMessages.ToList()[_random.Next(server.LeaveMessages.Count)]
@@ -86,11 +107,21 @@ namespace Radon.Services
         {
             Server server = null;
             _database.Execute(x => { server = x.Load<Server>($"{user.Guild.Id}"); });
-            if (!server.GetSetting(Setting.JoinMessage)) return;
+            if (!server.GetSetting(Setting.JoinMessage))
+            {
+                return;
+            }
 
-            if (!server.AnnounceChannelId.HasValue) return;
+            if (!server.AnnounceChannelId.HasValue)
+            {
+                return;
+            }
+
             var channel = user.Guild.GetTextChannel(server.AnnounceChannelId.Value);
-            if (channel == null) return;
+            if (channel == null)
+            {
+                return;
+            }
 
             var message = server.JoinMessages.Any()
                 ? server.JoinMessages.ToList()[_random.Next(server.JoinMessages.Count)]
@@ -101,8 +132,15 @@ namespace Radon.Services
 
         private async Task UserBanned(SocketUser arg1, SocketGuild guild)
         {
-            if (!(arg1 is SocketGuildUser user)) return;
-            if (!GetAuditLogEntry(guild, out var auditLog, Discord.ActionType.Ban)) return;
+            if (!(arg1 is SocketGuildUser user))
+            {
+                return;
+            }
+
+            if (!GetAuditLogEntry(guild, out var auditLog, Discord.ActionType.Ban))
+            {
+                return;
+            }
 
             var logItem = _service.AddLogItem(guild, ActionType.Ban, auditLog.Reason, auditLog.User.Id, user.Id);
 
@@ -112,7 +150,11 @@ namespace Radon.Services
 
         private async Task RoleUpdated(SocketRole roleBefore, SocketRole roleAfter)
         {
-            if (!GetAuditLogEntry(roleAfter.Guild, out var auditLog, Discord.ActionType.RoleUpdated)) return;
+            if (!GetAuditLogEntry(roleAfter.Guild, out var auditLog, Discord.ActionType.RoleUpdated))
+            {
+                return;
+            }
+
             var data = (RoleUpdateAuditLogData)auditLog.Data;
             var description =
                 $"Role ❯ {roleAfter.Mention}\nResponsible User ❯ {auditLog.User.Mention}\nReason ❯ {auditLog.Reason}\nId ❯ {auditLog.Id}\nChanges ❯";
@@ -120,9 +162,15 @@ namespace Radon.Services
             {
                 var before = property.GetValue(data.Before);
                 var after = property.GetValue(data.After);
-                if (before == null || after == null) continue;
+                if (before == null || after == null)
+                {
+                    continue;
+                }
 
-                if (before.ToString() != after.ToString()) description += $"\n❯ {property.Name}: {before} ⇒ {after}";
+                if (before.ToString() != after.ToString())
+                {
+                    description += $"\n❯ {property.Name}: {before} ⇒ {after}";
+                }
             }
 
             await SendLog(roleAfter.Guild, "Role Updated", description);
@@ -130,14 +178,22 @@ namespace Radon.Services
 
         private async Task RoleDeleted(SocketRole role)
         {
-            if (!GetAuditLogEntry(role.Guild, out var auditLog, Discord.ActionType.RoleDeleted)) return;
+            if (!GetAuditLogEntry(role.Guild, out var auditLog, Discord.ActionType.RoleDeleted))
+            {
+                return;
+            }
+
             await SendLog(role.Guild, "Role Deleted",
                 $"Role ❯ {role.Name}\nResponsible User ❯ {auditLog.User.Mention}\nReason ❯ {auditLog.Reason ?? "none"}\nId ❯ {auditLog.Id}");
         }
 
         private async Task RoleCreated(SocketRole role)
         {
-            if (!GetAuditLogEntry(role.Guild, out var auditLog, Discord.ActionType.RoleCreated)) return;
+            if (!GetAuditLogEntry(role.Guild, out var auditLog, Discord.ActionType.RoleCreated))
+            {
+                return;
+            }
+
             await SendLog(role.Guild, "Role Created",
                 $"Role ❯ {role.Mention}\nResponsible User ❯ {auditLog.User.Mention}\nReason ❯ {auditLog.Reason ?? "none"}\nId ❯ {auditLog.Id}");
         }
@@ -145,12 +201,26 @@ namespace Radon.Services
         private async Task MessageUpdated(Cacheable<IMessage, ulong> arg1, SocketMessage messageAfter,
             ISocketMessageChannel arg2)
         {
-            if (messageAfter.Author.IsBot) return;
-            if (!(arg2 is ITextChannel channel)) return;
-            if (messageAfter.Author.Id == _client.CurrentUser.Id) return;
+            if (messageAfter.Author.IsBot)
+            {
+                return;
+            }
+
+            if (!(arg2 is ITextChannel channel))
+            {
+                return;
+            }
+
+            if (messageAfter.Author.Id == _client.CurrentUser.Id)
+            {
+                return;
+            }
+
             var message = await arg1.GetOrDownloadAsync();
             if (message.Content == messageAfter.Content)
+            {
                 return;
+            }
 
             var description =
                 $"Author ❯ {messageAfter.Author.Mention}\nId ❯ {messageAfter.Id}\nResponsible User ❯ {messageAfter.Author.Mention}\nChannel ❯ {channel.Mention}\nContent ❯ {message.Content} ⇒ {messageAfter.Content}\nReason ❯ none";
@@ -160,12 +230,14 @@ namespace Radon.Services
 
         private async Task MessageDeleted(Cacheable<IMessage, ulong> arg1, ISocketMessageChannel arg)
         {
-            if (!(arg is ITextChannel channel)) return;
+            if (!(arg is ITextChannel channel))
+            {
+                return;
+            }
+
             GetAuditLogEntry(channel.Guild, out var auditLog, Discord.ActionType.MessageDeleted);
             var message = await arg1.GetOrDownloadAsync();
-#pragma warning disable CS0219 // Variable is assigned but its value is never used
-            var bulkDelete = false; // Says its never used but it is literally 5 lines below
-#pragma warning restore CS0219 // Variable is assigned but its value is never used
+            var bulkDelete = false;
 
             var description =
                 "Author ❯ {0}\nId ❯ {1}\nResponsible User ❯ {2}\nChannel ❯ {3}\nContent ❯ {4}\nReason ❯ {5}";
@@ -179,14 +251,22 @@ namespace Radon.Services
                 }
                 else
                 {
-                    if (message.Author.IsBot) return;
+                    if (message.Author.IsBot)
+                    {
+                        return;
+                    }
+
                     description = string.Format(description, message.Author.Mention, message.Id,
                         auditLog.User.Mention, channel.Mention, message.Content, auditLog.Reason ?? "none");
                 }
             }
             else
             {
-                if (message.Author.IsBot) return;
+                if (message.Author.IsBot)
+                {
+                    return;
+                }
+
                 description = string.Format(description, message.Author.Mention, message.Id,
                     message.Author.Mention, channel.Mention, message.Content, "none");
             }
@@ -197,33 +277,57 @@ namespace Radon.Services
 
         public async Task GuildMemberUpdated(SocketGuildUser userBefore, SocketGuildUser userAfter)
         {
-            if (userBefore.Status != userAfter.Status) return;
-            if (!GetAuditLogEntry(userAfter.Guild, out var auditLog, Discord.ActionType.MemberUpdated)) return;
+            if (userBefore.Status != userAfter.Status)
+            {
+                return;
+            }
+
+            if (!GetAuditLogEntry(userAfter.Guild, out var auditLog, Discord.ActionType.MemberUpdated))
+            {
+                return;
+            }
 
             var description =
                 $"User ❯ {userAfter.Mention}\nResponsible User ❯ {auditLog.User.Mention}\nReason ❯ {auditLog.Reason ?? "none"}\nId ❯ {auditLog.Id}\nChanges ❯";
             var oldDescription = description;
             if ((userBefore.Nickname ?? userBefore.Username) != (userAfter.Nickname ?? userAfter.Username))
+            {
                 description +=
                     $"\n❯ Nickname: {userBefore.Nickname ?? userBefore.Username} ⇒ {userAfter.Nickname ?? userAfter.Username}";
+            }
 
             var difference = userBefore.Roles.Except(userAfter.Roles);
             if (difference.Any())
+            {
                 description = difference.Aggregate(description,
                     (current, role) => current + $"\nRemoved ❯ {role.Mention}");
+            }
 
             difference = userAfter.Roles.Except(userBefore.Roles);
             if (difference.Any())
+            {
                 description =
                     difference.Aggregate(description, (current, role) => current + $"\nAdded ❯ {role.Mention}");
+            }
 
-            if (description != oldDescription) await SendLog(userAfter.Guild, "Member Updated", description);
+            if (description != oldDescription)
+            {
+                await SendLog(userAfter.Guild, "Member Updated", description);
+            }
         }
 
         public async Task ChannelUpdated(SocketChannel arg1, SocketChannel arg2)
         {
-            if (!(arg1 is IGuildChannel channelBefore) || !(arg2 is IGuildChannel channelAfter)) return;
-            if (!GetAuditLogEntry(channelAfter.Guild, out var auditLog, Discord.ActionType.ChannelUpdated)) return;
+            if (!(arg1 is IGuildChannel channelBefore) || !(arg2 is IGuildChannel channelAfter))
+            {
+                return;
+            }
+
+            if (!GetAuditLogEntry(channelAfter.Guild, out var auditLog, Discord.ActionType.ChannelUpdated))
+            {
+                return;
+            }
+
             var description =
                 string.Format("Channel ❯ {1}\nResponsible User ❯ {0}\nReason ❯ {1}\nId ❯ {2}\nChanges ❯",
                     auditLog.User.Mention, auditLog.Reason ?? "none", auditLog.Id);
@@ -257,17 +361,31 @@ namespace Radon.Services
                 var propertyBefore = property.GetValue(before);
                 var propertyAfter = property.GetValue(after);
                 if (propertyBefore.ToString() != propertyAfter.ToString())
+                {
                     description += $"\n❯ {property.Name}: {propertyBefore} ⇒ {propertyAfter}";
+                }
             }
 
-            if (description == oldDescription) return;
+            if (description == oldDescription)
+            {
+                return;
+            }
+
             await SendLog(channelAfter.Guild, "Channel Updated", description);
         }
 
         public async Task ChannelDestroyed(SocketChannel arg)
         {
-            if (!(arg is IGuildChannel channel)) return;
-            if (!GetAuditLogEntry(channel.Guild, out var auditLog, Discord.ActionType.ChannelDeleted)) return;
+            if (!(arg is IGuildChannel channel))
+            {
+                return;
+            }
+
+            if (!GetAuditLogEntry(channel.Guild, out var auditLog, Discord.ActionType.ChannelDeleted))
+            {
+                return;
+            }
+
             var description =
                 $"Channel ❯ {channel.Name}\nResponsible User ❯ {auditLog.User.Mention}\nReason ❯ {auditLog.Reason ?? "none"}\nId ❯ {auditLog.Id}";
 
@@ -276,8 +394,16 @@ namespace Radon.Services
 
         public async Task ChannelCreated(SocketChannel arg)
         {
-            if (!(arg is IGuildChannel channel)) return;
-            if (!GetAuditLogEntry(channel.Guild, out var auditLog, Discord.ActionType.ChannelCreated)) return;
+            if (!(arg is IGuildChannel channel))
+            {
+                return;
+            }
+
+            if (!GetAuditLogEntry(channel.Guild, out var auditLog, Discord.ActionType.ChannelCreated))
+            {
+                return;
+            }
+
             var description =
                 $"Channel ❯ {{0}}\nResponsible User ❯ {auditLog.User.Mention}\nReason ❯ {auditLog.Reason ?? "none"}\nId ❯ {auditLog.Id}";
             switch (arg)
@@ -297,14 +423,27 @@ namespace Radon.Services
             Server server = null)
         {
             timeStamp = timeStamp ?? DateTimeOffset.Now;
-            if (server == null) _database.Execute(x => { server = server ?? x.Load<Server>($"{guild.Id}"); });
+            if (server == null)
+            {
+                _database.Execute(x => { server = server ?? x.Load<Server>($"{guild.Id}"); });
+            }
 
-            if (!server.LogChannelId.HasValue) return;
+            if (!server.LogChannelId.HasValue)
+            {
+                return;
+            }
 
             var channel = await guild.GetTextChannelAsync(server.LogChannelId.Value);
-            if (channel == null) return;
+            if (channel == null)
+            {
+                return;
+            }
+
             var currentUser = await guild.GetCurrentUserAsync();
-            if (!currentUser.GetPermissions(channel).SendMessages) return;
+            if (!currentUser.GetPermissions(channel).SendMessages)
+            {
+                return;
+            }
 
             var embed = UtilService.NormalizeEmbed(title, description, ColorType.Normal, _random, server);
             embed.WithTimestamp(timeStamp.Value);
@@ -315,9 +454,17 @@ namespace Radon.Services
         private bool GetAuditLogEntry(IGuild guild, out IAuditLogEntry auditLog, Discord.ActionType type)
         {
             auditLog = guild.GetAuditLogsAsync(5).GetAwaiter().GetResult().FirstOrDefault(x => x.Action == type);
-            if (auditLog == null) return false;
+            if (auditLog == null)
+            {
+                return false;
+            }
+
             var timeStamp = SnowflakeUtils.FromSnowflake(auditLog.Id);
-            if (timeStamp > DateTimeOffset.Now - TimeSpan.FromSeconds(5)) return false;
+            if (timeStamp > DateTimeOffset.Now - TimeSpan.FromSeconds(5))
+            {
+                return false;
+            }
+
             return auditLog.User.Id != _client.CurrentUser.Id;
         }
     }

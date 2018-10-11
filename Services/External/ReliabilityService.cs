@@ -1,10 +1,10 @@
 ﻿#region
 
+using Discord;
+using Discord.WebSocket;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Discord;
-using Discord.WebSocket;
 
 #endregion
 
@@ -81,7 +81,11 @@ namespace Radon.Services.External
         private async Task CheckStateAsync()
         {
             // Client reconnected, no need to reset
-            if (_discord.ConnectionState == ConnectionState.Connected) return;
+            if (_discord.ConnectionState == ConnectionState.Connected)
+            {
+                return;
+            }
+
             if (AttemptReset)
             {
                 await InfoAsync("Attempting to reset the client");

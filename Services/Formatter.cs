@@ -91,6 +91,11 @@ namespace Radon.Services
             return $"<{url}>";
         }
 
+        public static DateTimeOffset UnixToDateTime(long unix)
+        {
+            return DateTimeOffset.FromUnixTimeSeconds(unix);
+        }
+
         /// <summary>
         ///     Creates a masked link. This link will display as specified text, and alternatively provided alt text. This can only
         ///     be used in embeds.

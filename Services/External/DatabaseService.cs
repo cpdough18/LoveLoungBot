@@ -19,7 +19,10 @@ namespace Radon.Services.External
             _store = new Lazy<IDocumentStore>(CreateStore);
             _configuration = configuration;
             if (Store.Maintenance.Server.Send(new GetDatabaseNamesOperation(0, 5)).All(x => x != DatabaseName))
+            {
                 Store.Maintenance.Server.Send(new CreateDatabaseOperation(new DatabaseRecord(DatabaseName)));
+            }
+
             Store.AggressivelyCacheFor(TimeSpan.FromDays(7));
         }
 

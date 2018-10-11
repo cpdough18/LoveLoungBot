@@ -49,19 +49,20 @@ namespace Radon.Modules
         [Summary("Shows some basic informations about the bot")]
         public async Task InfoAsync()
         {
-            await ReplyEmbedAsync(
-                $"{Context.Guild.CurrentUser.Nickname ?? Context.Guild.CurrentUser.Username} Information",
-                $"[Official Server]({Configuration.BotDiscordInviteLink})" +
-                $"\n[Invite](https://discordapp.com/oauth2/authorize?client_id={Context.Client.CurrentUser.Id}&scope=bot&permissions=2146958591)" +
-                //$"\n[Listcord](https://listcord.com/bot/{Context.Client.CurrentUser.Id})" +
-                $"\nShards ❯ {Context.Client.Shards.Count}" +
-                $"\nLast Restart ❯ {Process.GetCurrentProcess().StartTime.Humanize()}" +
-                $"\nGuilds ❯ {Context.Client.Guilds.Count}" +
-                $"\nUsers ❯ {Context.Client.Guilds.Sum(x => x.MemberCount)}" +
-                $"\nLatency ❯ {Context.Client.Latency}ms");
+            TimeSpan interval = TimeSpan.ParseExact((DateTime.UtcNow - Process.GetCurrentProcess().StartTime.ToUniversalTime()).ToString(), "c", null);
+            var embed = new EmbedBuilder()
+            .WithTitle($"{Context.Guild.CurrentUser.Nickname ?? Context.Guild.CurrentUser.Username} Info")
+            .WithDescription($"❯ [Official Server]({Configuration.BotDiscordInviteLink}) \n❯ [Invite](https://discordapp.com/oauth2/authorize?client_id={Context.Client.CurrentUser.Id}&scope=bot&permissions=2146958591)")
+            .AddField("❯ Current Shard", $"Current: {Context.Client.GetShardFor(Context.Guild).ShardId + 1} ({Context.Client.Shards.Count} Total)", true)
+            .AddField("❯ Users", Context.Client.Guilds.Sum(x => x.MemberCount), true)
+            .AddField("❯ Guilds", Context.Client.Guilds.Count, true)
+            .AddField("❯ Uptime", $"{interval.ToString()}", true)
+            .AddField("❯ Latency", $"{Context.Client.Latency}ms", true)
+            .AddField("❯ Owner", $"<@{_configuration.OwnerIds.First()}>", true);
+            await ReplyEmbedAsync(embed);
         }
         [Command("serverinfo")]
-        [Alias("server")]
+        [Alias("server", "si")]
         [Summary("Shows information about this server")]
         public async Task ServerInfoAsync()
         {
@@ -71,46 +72,25 @@ namespace Radon.Modules
                 emojis = emojis.Substring(0, Math.Min(1024, emojis.Length));
                 emojis = emojis.Substring(0, emojis.LastIndexOf(' '));
             }
-            string roles = string.Join(", ", Context.Guild.Roles.Select(x => x.Mention));
-            if (roles.Length > 512)
-            {
-                roles = roles.Substring(0, Math.Min(512, roles.Length));
-                roles = roles.Substring(0, roles.LastIndexOf(','));
-            }
             EmbedBuilder embed = new EmbedBuilder()
-                .WithAuthor(Context.Guild.Name, Context.Guild.IconUrl)
-                .AddField("General Information",
-                    $"Name ❯ {Context.Guild.Name}" +
-                    $"\nId ❯ {Context.Guild.Id}" +
-                    $"\nOwner ❯ {Context.Guild.Owner.Mention}" +
-                    $"\nVerification ❯ {Context.Guild.VerificationLevel}" +
-                    $"\nAfk Channel ❯ {(Context.Guild.AFKChannel == null ? "None" : Context.Guild.AFKChannel.Name)}" +
-                    $"\nAfk Timeout ❯ {Context.Guild.AFKTimeout.Minutes().TotalMinutes} minutes" +
-                    $"\nHighest Role ❯ {Context.Guild.Roles.OrderByDescending(x => x.Position).First().Mention}" +
-                    $"\nCreated On ❯ {Context.Guild.CreatedAt:G}",
-                    true)
-                .AddField($"Members - {Context.Guild.MemberCount}",
-                    $"<:online:486264689546887169> Online ❯ {Context.Guild.Users.Count(x => x.Status == UserStatus.Online && !x.IsBot)}" +
-                    $"\n<:idle:486264689408344074> Idle ❯ {Context.Guild.Users.Count(x => x.Status == UserStatus.Idle && !x.IsBot)}" +
-                    $"\n<:donotdisturb:486264689953603584> DoNotDisturb ❯ {Context.Guild.Users.Count(x => x.Status == UserStatus.DoNotDisturb && !x.IsBot)}" +
-                    $"\n<:streaming:486264689509269504> Streaming ❯ {Context.Guild.Users.Count(x => x.Activity?.Type == ActivityType.Streaming && !x.IsBot)}" +
-                    $"\n<:offline:486264689244897311> Offline ❯ {Context.Guild.MemberCount - Context.Guild.Users.Count(x => x.Status == UserStatus.Offline)}" +
-                    $"\n<:bot:486264689089708033> Bots ❯ {Context.Guild.Users.Count(x => x.IsBot)}",
-                    true)
-                .AddField($"Channels ❯ {Context.Guild.Channels.Count}",
-                    $"Categories ❯ {Context.Guild.CategoryChannels.Count}" +
-                    $"\nText Channels ❯ {Context.Guild.TextChannels.Count}" +
-                    $"\nVoice Channels ❯ {Context.Guild.VoiceChannels.Count}",
-                    true);
-
-            if (roles.Any())
-                embed.AddField($"Roles - {Context.Guild.Roles.Count}",
-                    roles, true);
-
+                .WithAuthor(Context.Guild.Name, Context.Guild.SplashUrl)
+                .AddField("❯ Server ID", Context.Guild.Id, true)
+                .AddField("❯ Total Members", $"{Context.Guild.MemberCount} " +
+                            $"(<:online:486264689546887169> {Context.Guild.Users.Count(x => x.Status == UserStatus.Online)}" +
+                            $"<:offline:486264689244897311> {Context.Guild.Users.Count(x => x.Status == UserStatus.Offline)})", true)
+                .AddField("❯ Location", Context.Guild.VoiceRegionId, true)
+                .AddField("❯ Owner", Context.Guild.Owner.Mention, true)
+                .AddField("❯ Roles", Context.Guild.Roles.Count, true)
+                .AddField("❯ Channels", $"{Context.Guild.TextChannels.Count} Text, {Context.Guild.VoiceChannels.Count} Voice ({Context.Guild.Channels.Count})", true)
+                .AddField("❯ Creation Date", Context.Guild.CreatedAt.Humanize(), true)
+                .AddField("❯ Radon Join Date", Context.Guild.CurrentUser.JoinedAt.Humanize(), true)
+                .AddField("❯ Highest Role", Context.Guild.Roles.OrderByDescending(x => x.Position).First().Mention, true)
+                .WithThumbnailUrl(Context.Guild.IconUrl);
             if (emojis.Any())
-                embed.AddField($"Emojis - {Context.Guild.Emotes.Count}",
+            {
+                embed.AddField($"❯ Emojis ({Context.Guild.Emotes.Count})",
                     emojis, true);
-
+            }
             await ReplyEmbedAsync(embed);
         }
         [Command("Feedback")]
@@ -236,8 +216,11 @@ namespace Radon.Modules
                             ? result.Commands.Select(x => x.Command).GetUsage(Context).InlineCode()
                             : result.Commands.First().Command.Module.GetUsage(Context).InlineCode());
                 if (specificCommand.Aliases.Count > 1)
+                {
                     embed.AddField("Aliases",
                         string.Join(", ", specificCommand.Aliases.Select(Formatter.InlineCode)));
+                }
+
                 await ReplyEmbedAsync(embed);
             }
             [Command("")]
@@ -249,7 +232,11 @@ namespace Radon.Modules
                 foreach (object value in Enum.GetValues(typeof(CommandCategory)))
                 {
                     CommandCategory category = (CommandCategory)value;
-                    if (Server != null && Server.DisabledCategories.Contains(category)) continue;
+                    if (Server != null && Server.DisabledCategories.Contains(category))
+                    {
+                        continue;
+                    }
+
                     EmbedBuilder embed = NormalizeEmbed($"{category.Humanize(LetterCasing.Title)} Commands",
                         $"Use {"help <command/category>".InlineCode()} to see more information about a specific command/categoory" +
                         $"\n\n{"< >".InlineCode()} indicates a required parameter\n{"( )".InlineCode()} indicates an optional parameter");
@@ -270,8 +257,10 @@ namespace Radon.Modules
                                         }
                                     }
                                     else
+                                    {
                                         embed.AddField($"{module.Group.Humanize(LetterCasing.Title)}",
                                             $"{module.Summary}\n{module.GetUsage(Context).InlineCode()}");
+                                    }
                                 }
 
                                 embeds.Add(embed);
@@ -293,8 +282,10 @@ namespace Radon.Modules
                                             }
                                         }
                                         else
+                                        {
                                             embed.AddField($"{module.Group.Humanize(LetterCasing.Title)}",
                                                 $"{module.Summary}\n{module.GetUsage(Context).InlineCode()}");
+                                        }
                                     }
 
                                     EmbedBuilder pageEmbed = NormalizeEmbed(embed);
@@ -343,8 +334,10 @@ namespace Radon.Modules
                     IEnumerable<KeyValuePair<string, Tag>> bestMatchingTags = Server.Tags.OrderBy(pair => tag.CalculateDifference(pair.Key))
                         .Take(3);
                     if (bestMatchingTags.Any())
+                    {
                         embed.Description += string.Join("",
                             bestMatchingTags.Select(x => $"\n- {x.Key.InlineCode()}"));
+                    }
                 }
                 await ReplyEmbedAsync(embed);
             }
@@ -354,7 +347,11 @@ namespace Radon.Modules
             {
                 if (Server.Tags.TryGetValue(name, out Tag tag))
                 {
-                    if (!CheckPermissions(tag)) return;
+                    if (!CheckPermissions(tag))
+                    {
+                        return;
+                    }
+
                     tag.AuthorId = Context.User.Id;
                     tag.Name = name;
                     tag.Message = message;
@@ -400,7 +397,11 @@ namespace Radon.Modules
             {
                 if (Server.Tags.TryGetValue(tag, out Tag specificTag))
                 {
-                    if (!CheckPermissions(specificTag)) return;
+                    if (!CheckPermissions(specificTag))
+                    {
+                        return;
+                    }
+
                     specificTag.AuthorId = Context.User.Id;
                     specificTag.Name = tag;
                 }
@@ -448,7 +449,11 @@ namespace Radon.Modules
             {
                 if (Server.Tags.TryGetValue(name, out Tag tag))
                 {
-                    if (!CheckPermissions(tag)) return;
+                    if (!CheckPermissions(tag))
+                    {
+                        return;
+                    }
+
                     tag.AuthorId = Context.User.Id;
                     tag.Name = name;
                     tag.Message = message;
@@ -492,7 +497,11 @@ namespace Radon.Modules
             {
                 if (Server.Tags.TryGetValue(name, out Tag tag))
                 {
-                    if (!CheckPermissions(tag)) return;
+                    if (!CheckPermissions(tag))
+                    {
+                        return;
+                    }
+
                     await ReplyEmbedAsync("Tag Updated",
                         $"Updated the name of the tag {tag.Name.InlineCode()} to {newname.InlineCode()}");
                     tag.AuthorId = Context.User.Id;
@@ -512,7 +521,11 @@ namespace Radon.Modules
             {
                 if (Server.Tags.TryGetValue(tag, out Tag specificTag))
                 {
-                    if (!CheckPermissions(specificTag)) return;
+                    if (!CheckPermissions(specificTag))
+                    {
+                        return;
+                    }
+
                     Server.Tags.Remove(tag);
                     await ReplyEmbedAsync("Tag Removed", $"Removed the tag {specificTag.Name.InlineCode()}");
                 }
@@ -549,8 +562,15 @@ namespace Radon.Modules
             private bool CheckPermissions(Tag tag)
             {
                 SocketGuildUser target = Context.Guild.GetUser(tag.AuthorId);
-                if (target == null) return true;
-                if (target.Id == Context.User.Id) return true;
+                if (target == null)
+                {
+                    return true;
+                }
+
+                if (target.Id == Context.User.Id)
+                {
+                    return true;
+                }
 
                 return target.Hierarchy < ((SocketGuildUser)Context.User).Hierarchy;
             }
@@ -568,11 +588,15 @@ namespace Radon.Modules
             {
                 EmbedBuilder embed = new EmbedBuilder()
                     .WithAuthor($"{user.Nickname ?? user.Username}'s profile", user.GetAvatarUrl() ?? user.GetDefaultAvatarUrl())
-                    .WithDescription($"Id ❯ {user.Id}" +
-                                     $"\nJoined This Server ❯ {user.JoinedAt:dd.MM.yyyy HH:mm:ss} ({user.JoinedAt.Humanize()})" +
-                                     $"\nJoined Discord ❯ {user.CreatedAt:dd.MM.yyyy HH:mm:ss} ({user.CreatedAt.Humanize()})" +
-                                     $"\nPosition ❯ {(user.Hierarchy == int.MaxValue ? Context.Guild.Roles.Max(x => x.Position) : user.Hierarchy)}/{Context.Guild.Roles.Max(x => x.Position)}" +
-                                     $"\nStatus ❯ {user.Status.Humanize(LetterCasing.Title)}");
+                    .AddField("❯ Nickname", user.Username, true)
+                    .AddField("❯ User ID", user.Id, true)
+                    .AddField("❯ User Status", user.Status, true)
+                    .AddField("❯ Playing", user.Activity, true)
+                    .AddField("❯ Highest Role", Context.Guild.GetUser(user.Id).Roles.OrderByDescending(x => x.Position).First().Mention, true)
+                    .AddField("❯ Joined Guild", Context.Guild.GetUser(user.Id).JoinedAt.Humanize())
+                    .AddField("❯ Joined Discord", user.CreatedAt.Humanize())
+                    .WithThumbnailUrl(user.GetAvatarUrl());
+
                 await ReplyEmbedAsync(embed);
             }
         }

@@ -1,11 +1,11 @@
 ﻿#region
 
-using System;
-using System.Collections.Generic;
 using Discord;
 using Newtonsoft.Json;
 using Radon.Core;
 using Radon.Services.External;
+using System;
+using System.Collections.Generic;
 
 #endregion
 
@@ -51,6 +51,7 @@ namespace Radon.Services
         public HashSet<string> Prefixes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         public Dictionary<string, Tag> Tags = new Dictionary<string, Tag>(StringComparer.OrdinalIgnoreCase);
         public Dictionary<ulong, Userxp> Userxps = new Dictionary<ulong, Userxp>();
+        public Dictionary<ulong, Warn> Warns = new Dictionary<ulong, Warn>();
         public HashSet<ulong> Whitelist = new HashSet<ulong>();
         public string Name { get; set; }
         public string Id { get; private set; }
@@ -184,7 +185,9 @@ namespace Radon.Services
         Clear,
         Bulk,
         Unban,
-        Unmute
+        Unmute,
+        Warn,
+        Unwarn
     }
 
     public enum BlockingType

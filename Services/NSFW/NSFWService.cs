@@ -7,7 +7,6 @@ using Radon.Core;
 using Radon.Services.External;
 using System;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Threading.Tasks;
 
 #endregion
@@ -51,17 +50,17 @@ namespace Radon.Services.Nsfw
                 foreach (var item in data.Children())
                 {
                     string rating = data[stuff]["rating"].ToString();
-                    string emote = ":question:";
+                    string ratingEmote = ":question:";
                     switch (rating)
                     {
                         case "s":
-                            emote = ":green_heart:";
+                            ratingEmote = ":green_heart:";
                             break;
                         case "q":
-                            emote = ":yellow_heart:";
+                            ratingEmote = ":yellow_heart:";
                             break;
                         case "e":
-                            emote = ":purple_heart:";
+                            ratingEmote = ":purple_heart:";
                             break;
                         default:
                             break;
@@ -72,7 +71,7 @@ namespace Radon.Services.Nsfw
                         var embed = new EmbedBuilder()
                         .WithTitle($"{data[stuff]["author"]} | {data[stuff]["tags"].ToString().WithMaxLength(30)}")
                         .WithUrl($"{data[stuff]["source"]}")
-                        .AddField("Statistics", $"<:upvote:486361126658113536> {data[stuff]["score"]} | :heart: {data[stuff]["fav_count"]} | {emote}");
+                        .AddField("Statistics", $"<:upvote:486361126658113536> {data[stuff]["score"]} | :heart: {data[stuff]["fav_count"]} | {ratingEmote}");
                         await context.Channel.SendMessageAsync(embed: embed.Build(), text: $"{data[stuff]["file_url"]}");
 
                     }
@@ -82,7 +81,7 @@ namespace Radon.Services.Nsfw
                         .WithTitle($"{data[stuff]["author"]} | {data[stuff]["tags"].ToString().WithMaxLength(30)}")
                         .WithUrl($"{data[stuff]["source"]}")
                         .WithImageUrl($"{data[stuff]["file_url"]}")
-                        .AddField("Statistics", $"<:upvote:486361126658113536> {data[stuff]["score"]} | :heart: {data[stuff]["fav_count"]} | {emote}");
+                        .AddField("Statistics", $"<:upvote:486361126658113536> {data[stuff]["score"]} | :heart: {data[stuff]["fav_count"]} | {ratingEmote}");
                         await context.Channel.SendMessageAsync(embed: embed.Build());
                     }
                     _httpClient.DefaultRequestHeaders.Authorization = null;

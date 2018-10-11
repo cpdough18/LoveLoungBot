@@ -1,16 +1,16 @@
 ﻿#region
 
+using Discord;
+using Discord.Commands;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Radon.Core;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text.RegularExpressions;
-using Discord;
-using Discord.Commands;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using Radon.Core;
 
 #endregion
 
@@ -34,10 +34,17 @@ namespace Radon.Services.External
             {
                 var usage = command.GetName();
                 foreach (var parameter in command.Parameters)
+                {
                     if (parameter.IsOptional)
+                    {
                         usage += $" ({parameter.Name})";
+                    }
                     else
+                    {
                         usage += $" <{parameter.Name}>";
+                    }
+                }
+
                 overloadUsages.Add(usage);
             }
 
@@ -48,10 +55,17 @@ namespace Radon.Services.External
         {
             var usage = command.GetName();
             foreach (var parameter in command.Parameters)
+            {
                 if (parameter.IsOptional)
+                {
                     usage += $" ({parameter.Name})";
+                }
                 else
+                {
                     usage += $" <{parameter.Name}>";
+                }
+            }
+
             return usage;
         }
 
@@ -62,10 +76,17 @@ namespace Radon.Services.External
             {
                 var usage = command.GetName();
                 foreach (var parameter in command.Parameters)
+                {
                     if (parameter.IsOptional)
+                    {
                         usage += $" ({parameter.Name})";
+                    }
                     else
+                    {
                         usage += $" <{parameter.Name}>";
+                    }
+                }
+
                 overloadUsages.Add(usage);
             }
 
@@ -92,14 +113,20 @@ namespace Radon.Services.External
             ShardedCommandContext context = null)
         {
             if (withRequested && context != null)
+            {
                 embed.WithFooter(
                     $"Requested by {(context.User as IGuildUser)?.Nickname ?? context.User.Username}#{context.User.Discriminator}",
                     context.User.GetAvatarUrl() ?? context.User.GetDefaultAvatarUrl());
+            }
+
             embed.SetColor(colorType, server, random);
             if (withRequested)
+            {
                 embed.WithFooter(
                     $"Requested by {(context.User as IGuildUser)?.Nickname ?? context.User.Username}#{context.User.Discriminator}",
                     context.User.GetAvatarUrl() ?? context.User.GetDefaultAvatarUrl());
+            }
+
             return embed;
         }
 
@@ -109,16 +136,22 @@ namespace Radon.Services.External
         {
             var embed = new EmbedBuilder();
             if (withRequested && context != null)
+            {
                 embed.WithFooter(
                     $"Requested by {(context.User as IGuildUser)?.Nickname ?? context.User.Username}#{context.User.Discriminator}",
                     context.User.GetAvatarUrl() ?? context.User.GetDefaultAvatarUrl());
+            }
+
             embed.SetColor(colorType, server, random)
                 .WithTitle(title)
                 .WithDescription(description);
             if (withRequested)
+            {
                 embed.WithFooter(
                     $"Requested by {(context.User as IGuildUser)?.Nickname ?? context.User.Username}#{context.User.Discriminator}",
                     context.User.GetAvatarUrl() ?? context.User.GetDefaultAvatarUrl());
+            }
+
             return embed;
         }
 
@@ -148,7 +181,9 @@ namespace Radon.Services.External
         public static bool GetChannelSettings(this Server server, ulong channelId, Setting setting)
         {
             if (server.DisabledChannelSettings.TryGetValue(channelId, out var disabled))
+            {
                 return !disabled.Contains(setting);
+            }
 
             return server.GetSetting(setting);
         }
@@ -163,7 +198,9 @@ namespace Radon.Services.External
             };
 
             foreach (var pair in dictionary)
+            {
                 message = message.Replace(pair.Key, pair.Value, StringComparison.OrdinalIgnoreCase);
+            }
 
             return message;
         }
@@ -171,7 +208,10 @@ namespace Radon.Services.External
         public static Dictionary<string, string> GetColors()
         {
             const string filePath = "colors.json";
-            if (!File.Exists(filePath)) File.Create(filePath).Close();
+            if (!File.Exists(filePath))
+            {
+                File.Create(filePath).Close();
+            }
 
             var dictionary = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText(filePath));
             dictionary = new Dictionary<string, string>(dictionary, StringComparer.OrdinalIgnoreCase);
@@ -184,14 +224,28 @@ namespace Radon.Services.External
             var m = second.Length;
             var d = new int[n + 1, m + 1];
 
-            if (n == 0) return m;
+            if (n == 0)
+            {
+                return m;
+            }
 
-            if (m == 0) return n;
+            if (m == 0)
+            {
+                return n;
+            }
 
-            for (var i = 0; i <= n; d[i, 0] = i++) ;
-            for (var j = 0; j <= m; d[0, j] = j++) ;
+            for (var i = 0; i <= n; d[i, 0] = i++)
+            {
+                ;
+            }
+
+            for (var j = 0; j <= m; d[0, j] = j++)
+            {
+                ;
+            }
 
             for (var i = 1; i <= n; i++)
+            {
                 for (var j = 1; j <= m; j++)
                 {
                     var cost = second[j - 1] == first[i - 1] ? 0 : 1;
@@ -200,6 +254,7 @@ namespace Radon.Services.External
                         Math.Min(d[i - 1, j] + 1, d[i, j - 1] + 1),
                         d[i - 1, j - 1] + cost);
                 }
+            }
 
             return d[n, m];
         }

@@ -6,18 +6,21 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="CoubSharp" Version="0.0.6.1-alpha" />
     <PackageReference Include="Discord.Addons.InteractiveCommands" Version="1.2.4" />
-    <PackageReference Include="Discord.Net" Version="2.0.0-beta2-00989" />
-    <PackageReference Include="Discord.Net.Commands" Version="2.0.0-beta2-00989" />
-    <PackageReference Include="Discord.Net.Core" Version="2.0.0-beta2-00989" />
-    <PackageReference Include="Discord.Net.Rest" Version="2.0.0-beta2-00989" />
-    <PackageReference Include="Discord.Net.Webhook" Version="2.0.0-beta2-00989" />
-    <PackageReference Include="Discord.Net.WebSocket" Version="2.0.0-beta2-00989" />
+    <PackageReference Include="Discord.Net" Version="2.0.0-beta2-01000" />
+    <PackageReference Include="Discord.Net.Commands" Version="2.0.0-beta2-01000" />
+    <PackageReference Include="Discord.Net.Core" Version="2.0.0-beta2-01000" />
+    <PackageReference Include="Discord.Net.Rest" Version="2.0.0-beta2-01000" />
+    <PackageReference Include="Discord.Net.Webhook" Version="2.0.0-beta2-01000" />
+    <PackageReference Include="Discord.Net.WebSocket" Version="2.0.0-beta2-01000" />
+    <PackageReference Include="E621DotNet" Version="1.0.0" />
     <PackageReference Include="GiphyDotNet" Version="1.0.0" />
-    <PackageReference Include="Humanizer" Version="2.4.2" />
+    <PackageReference Include="Humanizer" Version="2.5.1" />
+    <PackageReference Include="KSoft.Net" Version="1.0.12" />
+    <PackageReference Include="RavenDB.Client" Version="4.1.1" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="2.9.0" />
     <PackageReference Include="morelinq" Version="3.0.0" />
-    <PackageReference Include="RavenDB.Client" Version="4.1.0" />
     <PackageReference Include="SharpLink" Version="1.0.0-beta-0005" />
   </ItemGroup>
 

@@ -3,6 +3,7 @@
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using KSoftDotNet.Manager;
 using Radon.Core;
 using Radon.Services;
 using System;
@@ -22,11 +23,30 @@ namespace Radon.Modules
     {
         private readonly LogService _logService;
         private readonly ServerService _serverService;
+        private readonly KSoft _kSoft;
 
-        public ModerationModule(LogService logService, ServerService serverService)
+        public ModerationModule(LogService logService, ServerService serverService, KSoft kSoft)
         {
             _logService = logService;
             _serverService = serverService;
+            _kSoft = kSoft;
+        }
+
+        [Command("GlobalBan")]
+        [Alias("gban", "gb")]
+        [RequireUserPermission(GuildPermission.BanMembers)]
+        [RequireBotPermission(GuildPermission.BanMembers)]
+        [Summary("Submits global ban request to the KSoft API")]
+        public async Task GlobalBanAsync([CheckBotHierarchy] [CheckUserHierarchy] IGuildUser user, string proof, bool appealable, [Remainder] string reason)
+        {
+            var result = await _kSoft.AddBan((int)user.Id, reason, proof, (int)Context.Message.Author.Id, appealPossible: appealable);
+
+            EmbedBuilder embed = new EmbedBuilder()
+                .WithTitle("User reported")
+                .WithDescription($"{user.Mention} has been a bad boy.")
+                .WithThumbnailUrl(user.GetAvatarUrl())
+                .WithFooter($"Reported by {Context.Message.Author.Username} | KSoft.Si");
+            await ReplyEmbedAsync(embed);
         }
 
         [Command("ban")]
@@ -42,7 +62,8 @@ namespace Radon.Modules
                 await user.SendMessageAsync(embed: NormalizeEmbed("You got banned",
                         $"Server ❯ {Context.Guild.Name}\nResponsible User ❯ {Context.User.Mention}\nReason ❯ {reason ?? "none"}")
                     .Build());
-            } catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 Console.WriteLine(ex);
             }
@@ -143,9 +164,33 @@ namespace Radon.Modules
             var overwrite = new Overwrite(role.Id, PermissionTarget.Role, overwritePermissions);
 
             foreach (var channel in Context.Guild.Channels)
+            {
                 if (!channel.PermissionOverwrites.Contains(overwrite))
+                {
                     await channel.AddPermissionOverwriteAsync(role, overwritePermissions);
+                }
+            }
         }
+
+        [Command("warn")]
+        [RequireUserPermission(GuildPermission.MuteMembers)]
+        [RequireBotPermission(GuildPermission.MuteMembers)]
+        public async Task WarnAsync([CheckUserHierarchy][CheckBotHierarchy] SocketGuildUser user, [Remainder] string reason = null)
+        {
+            var logItem = _serverService.AddLogItem(Server, ActionType.Warn, reason, Context.User.Id, user.Id);
+
+            
+
+            await _logService.SendLog(Context.Guild, "User Warned",
+               $"Responsible User ❯ {Context.User.Mention}\nUser ❯ {user.Mention} ({user.Nickname ?? user.Username}#{user.Discriminator})\nReason ❯ {reason ?? $"none, {Context.User.Mention} use {$"reason {logItem.LogId} <reason>".InlineCode()}"}\nId ❯ {logItem.LogId}",
+               server: Server);
+
+            await ReplyEmbedAsync("User Warned",
+                $"Responsible User ❯ {Context.User.Mention}\nReason ❯ {reason ?? $"none, {Context.User.Mention} use {$"reason {logItem.LogId} <reason>".InlineCode()}"}");
+
+        }
+
+
 
         [Command("unmute")]
         [Alias("um")]
@@ -193,9 +238,12 @@ namespace Radon.Modules
             var overwrite = new Overwrite(role.Id, PermissionTarget.Role, overwritePermissions);
 
             foreach (var channel in Context.Guild.Channels)
+            {
                 if (!channel.PermissionOverwrites.Contains(overwrite))
+                {
                     await channel.AddPermissionOverwriteAsync(role, overwritePermissions);
-
+                }
+            }
         }
 
         [Command("bulk")]
@@ -215,6 +263,7 @@ namespace Radon.Modules
                 x.Position = oldChannel.Position;
             });
             foreach (var permissionOverwrite in oldChannel.PermissionOverwrites)
+            {
                 switch (permissionOverwrite.TargetType)
                 {
                     case PermissionTarget.Role:
@@ -226,6 +275,8 @@ namespace Radon.Modules
                         await channel.AddPermissionOverwriteAsync(user, permissionOverwrite.Permissions);
                         break;
                 }
+            }
+
             await Interactive.ReplyAndDeleteAsync(channel,
                 embed: NormalizeEmbed("Chat Cleared", "Deleted all messages from this channel").Build());
             var logItem = _serverService.AddLogItem(Server, ActionType.Bulk, reason, Context.User.Id, 0);
@@ -272,10 +323,14 @@ namespace Radon.Modules
             public async Task ReasonAsync(ulong id)
             {
                 if (Server.ModLog.TryGetValue(id, out var logItem))
+                {
                     await ReplyEmbedAsync("Reason",
                         $"The reason of {$"{logItem.LogId}".InlineCode()} is {$"{logItem.Reason ?? "not set"}".InlineCode()}");
+                }
                 else
+                {
                     await ReplyEmbedAsync("Not Found", $"Couldn't find a log item with the id {$"{id}".InlineCode()}");
+                }
             }
         }
 

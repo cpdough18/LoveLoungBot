@@ -1,8 +1,8 @@
-﻿using System.Linq;
-using System.Threading.Tasks;
-using Discord;
+﻿using Discord;
 using Discord.WebSocket;
 using Radon.Core;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Radon.Services.External
 {
@@ -34,9 +34,11 @@ namespace Radon.Services.External
         private async Task UpdateStatistics()
         {
             foreach (var shard in _client.Shards)
+            {
                 await shard.SetActivityAsync(new Game(
                     $"you | {_configuration.BotPrefixes.First()}help | Shard {shard.ShardId + 1}/{_client.Shards.Count} | {_client.Guilds.Count} servers",
                     ActivityType.Watching));
+            }
         }
     }
 }

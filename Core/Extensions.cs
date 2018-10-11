@@ -1,11 +1,10 @@
 ﻿#region
 
-using System;
 using Discord.Commands;
 using Discord.WebSocket;
 using Radon.Services;
 using Radon.Services.External;
-using Radon.Core;
+using System;
 
 #endregion
 
@@ -27,7 +26,6 @@ namespace Radon.Core
         {
             Category = category;
         }
-
         public CommandCategory Category { get; }
     }
 

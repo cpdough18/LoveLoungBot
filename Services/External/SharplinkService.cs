@@ -1,9 +1,10 @@
 ﻿using Discord;
 using Radon.Core;
 using SharpLink;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-
 
 namespace Radon.Services.External
 {
@@ -11,6 +12,9 @@ namespace Radon.Services.External
     {
         private readonly LavalinkManager _lavalinkManager;
         public SharplinkService(Configuration configuration, LavalinkManager lavalinkManager) => _lavalinkManager = lavalinkManager;
+
+        public List<SharplinkQueue> Queue = new List<SharplinkQueue>();
+
 
         public async Task<string> SearchAsync(string query)
         {
@@ -33,7 +37,22 @@ namespace Radon.Services.External
             LavalinkPlayer player = _lavalinkManager.GetPlayer(guildID) ?? await _lavalinkManager.JoinAsync(voiceChannel);
             LoadTracksResponse response = await _lavalinkManager.GetTracksAsync(url);
             LavalinkTrack track = response.Tracks.First();
-            await player.PlayAsync(track);
+
+            if (GetTrackInfo(guildID) == null)
+            {
+                await player.PlayAsync(track);
+            }
+            else
+            {
+                AddToQueue(guildID, track);
+            }
+        }
+
+        public void AddToQueue(ulong guildID, LavalinkTrack track)
+        {
+            var uwu = new SharplinkQueue(guildID, track);
+            Queue.Add(uwu);
+            Console.WriteLine(Queue.ToArray().ToString());
         }
         public async Task StopAsync(ulong guildID) => await _lavalinkManager.LeaveAsync(guildID);
         public async Task JoinAsync(IVoiceChannel voiceChannel) => await _lavalinkManager.JoinAsync(voiceChannel);

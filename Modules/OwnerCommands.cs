@@ -56,7 +56,7 @@ namespace Radon.Modules
                         Context = Context,
                         Database = Database,
                         Random = Random,
-                        Server = Server
+                        Server = Server,
                     }, typeof(EvaluateObject));
                 embed.WithTitle("Completed")
                     .WithDescription($"Result: {result ?? "none"}");

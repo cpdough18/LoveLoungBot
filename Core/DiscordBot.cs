@@ -1,5 +1,19 @@
 ﻿#region
 
+using CoubSharp;
+using Discord;
+using Discord.Addons.Interactive;
+using Discord.Commands;
+using Discord.WebSocket;
+using E621DotNet;
+using GiphyDotNet.Manager;
+using Humanizer;
+using KSoftDotNet.Manager;
+using Microsoft.Extensions.DependencyInjection;
+using Radon.Services;
+using Radon.Services.External;
+using Radon.Services.Nsfw;
+using SharpLink;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,17 +22,6 @@ using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Discord;
-using Discord.Addons.Interactive;
-using Discord.Commands;
-using Discord.WebSocket;
-using GiphyDotNet.Manager;
-using Humanizer;
-using Microsoft.Extensions.DependencyInjection;
-using Radon.Services;
-using Radon.Services.External;
-using SharpLink;
-using Radon.Services.Nsfw;
 
 #endregion
 
@@ -34,6 +37,10 @@ namespace Radon.Core
         private InteractiveService _interactive;
         private IServiceProvider _services;
         private LavalinkManager _lavalinkManager;
+        private KSoft _kSoft;
+        private E621 _e621;
+        private IAuthorizationService _authService;
+        private ICoubService _coubService;
 
         public async Task InitializeAsync()
         {
@@ -41,11 +48,25 @@ namespace Radon.Core
             _configuration = ConfigurationService.LoadNewConfig();
             _database = new DatabaseService(_configuration);
             _httpClient = new HttpClient();
+            _kSoft = new KSoft(_configuration.KsoftApiKey);
+            _e621 = new E621(_configuration.E621UserAgent);
+            //_authService = new AuthorizationService(_configuration.CoubAppID, _configuration.CoubAppSecret);
+            //var urlToGetAuthorizeCode = _authService.AuthorizationCodeUrlAsync("http://coub.com/oauth/token", new string[]
+            //{
+            //    AuthorizationService.Scope.LoggedIn,
+            //    AuthorizationService.Scope.Recoub,
+            //    AuthorizationService.Scope.Create,
+            //    AuthorizationService.Scope.ChannelEdit,
+            //    AuthorizationService.Scope.Follow
+            //});
+            //var token = await _authService.AuthorizeTokenAsync("http://coub.com/oauth/authorize", urlToGetAuthorizeCode);
+
+            //_coubService = new CoubService(token.AccessToken);
             _client = new DiscordShardedClient(new DiscordSocketConfig
             {
                 AlwaysDownloadUsers = true,
                 DefaultRetryMode = RetryMode.AlwaysRetry,
-                LogLevel = LogSeverity.Info,
+                LogLevel = LogSeverity.Verbose,
                 MessageCacheSize = 2048,
                 TotalShards = _configuration.ShardCount
             });
@@ -73,6 +94,9 @@ namespace Radon.Core
                 .AddSingleton(_interactive)
                 .AddSingleton(_httpClient)
                 .AddSingleton(_lavalinkManager)
+                .AddSingleton(_kSoft)
+                .AddSingleton(_e621)
+                //.AddSingleton(_coubService)
                 .AddSingleton(new Giphy(_configuration.GiphyApiKey))
                 .AddSingleton<StatisticsService>()
                 .AddSingleton<Random>()
@@ -80,7 +104,6 @@ namespace Radon.Core
                 .AddSingleton<CachingService>()
                 .AddSingleton<ServerService>()
                 .AddSingleton<NSFWService>()
-                .AddSingleton<KsoftBanApiService>()
                 .AddSingleton<SharplinkService>()
                 .BuildServiceProvider();
             _services.GetService<LogService>();
@@ -110,7 +133,10 @@ namespace Radon.Core
 
         private static Task Log(LogMessage message)
         {
-            if (message.Message.StartsWith("A") || message.Message.StartsWith("Unknown")) return Task.CompletedTask;
+            if (message.Message.StartsWith("A") || message.Message.StartsWith("Unknown"))
+            {
+                return Task.CompletedTask;
+            }
             Console.ForegroundColor = ConsoleColor.Green;
             Console.Write(
                 $"[{DateTimeOffset.Now:dd.MM.yyyy HH:mm:ss}] [{message.Severity}] [{message.Source}]: ");
@@ -123,7 +149,10 @@ namespace Radon.Core
         {
             try
             {
-                if (msg.Author.IsBot || !(msg is SocketUserMessage message)) return;
+                if (msg.Author.IsBot || !(msg is SocketUserMessage message))
+                {
+                    return;
+                }
 
                 int argPos = 0;
 
@@ -156,13 +185,13 @@ namespace Radon.Core
                     executionObj = new ExecutionObject();
                 }
 
-                if (message.HasMentionPrefix(_client.CurrentUser, ref argPos) || prefixes.Any(x =>
-                        message.HasStringPrefix(x, ref argPos, StringComparison.OrdinalIgnoreCase)))
+                if (message.HasMentionPrefix(_client.CurrentUser, ref argPos) || prefixes.Any(x => message.HasStringPrefix(x, ref argPos, StringComparison.OrdinalIgnoreCase)))
                 {
                     ShardedCommandContext context = new ShardedCommandContext(_client, message);
                     string parameters = message.Content.Substring(argPos).TrimStart('\n', ' ');
                     _services.GetService<CachingService>().ExecutionObjects[message.Id] = executionObj;
                     IResult result = await _commands.ExecuteAsync(context, parameters, _services, MultiMatchHandling.Best);
+                    Console.WriteLine($"User {message.Author.Username} in {context.Guild.Name}: {message.ToString()}");
                     if (!result.IsSuccess)
                     {
                         await HandleErrorAsync(result, context, parameters, server);
@@ -171,8 +200,8 @@ namespace Radon.Core
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
-                throw;
+                Console.WriteLine(e.ToString());
+                throw new Exception(e.ToString());
             }
         }
 
@@ -186,6 +215,7 @@ namespace Radon.Core
                     break;
                 case CommandError.BadArgCount:
                 case CommandError.ParseFailed:
+                    break;
                 case CommandError.ObjectNotFound:
                     SearchResult searchResult = _commands.Search(context, parameters);
                     if (result.Error == CommandError.BadArgCount)
@@ -219,7 +249,7 @@ namespace Radon.Core
                 case CommandError.Exception:
                 case null:
                     embed.WithTitle("Internal Error")
-                        .WithDescription("Error: null");
+                        .WithDescription($"Error: {result.ErrorReason}");
                     await context.Channel.SendMessageAsync(embed: embed.Build());
                     break;
                 default:

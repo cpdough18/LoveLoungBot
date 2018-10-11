@@ -1,16 +1,16 @@
 ﻿#region
 
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using Radon.Core;
 using Radon.Services;
 using Radon.Services.External;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Threading.Tasks;
 
 #endregion
 
@@ -258,9 +258,13 @@ namespace Radon.Modules
             public async Task AddPrefixAsync([Remainder] string prefix)
             {
                 if (Server.Prefixes.Add(prefix))
+                {
                     await ReplyEmbedAsync("Prefix Added", $"Added the prefix {prefix.InlineCode()}");
+                }
                 else
+                {
                     await ReplyEmbedAsync("Already Existing", $"The prefix {prefix.InlineCode()} already exists");
+                }
             }
 
             [Command("remove")]
@@ -270,9 +274,13 @@ namespace Radon.Modules
             public async Task RemovePrefixAsync([Remainder] string prefix)
             {
                 if (Server.Prefixes.Remove(prefix))
+                {
                     await ReplyEmbedAsync("Prefix Removed", $"Removed the prefix {prefix.InlineCode()}");
+                }
                 else
+                {
                     await ReplyEmbedAsync("Unknown Prefix", $"The prefix {prefix.InlineCode()} doesn't exist");
+                }
             }
 
             [Command("clear")]
@@ -316,9 +324,13 @@ namespace Radon.Modules
             public async Task AddJoinMessageAsync([Remainder] string message)
             {
                 if (Server.JoinMessages.Add(message))
+                {
                     await ReplyEmbedAsync("Joinmessage Added", $"Added the joinmessage {message.InlineCode()}");
+                }
                 else
+                {
                     await ReplyEmbedAsync("Joinmessage Exists", "This joinmessage already exists");
+                }
             }
 
             [Command("remove")]
@@ -336,11 +348,15 @@ namespace Radon.Modules
                 if (Server.JoinMessages.Count < id || id < 1)
                 {
                     if (Server.JoinMessages.Count == 1)
+                    {
                         await ReplyEmbedAsync("Message Not Found",
                             $"You can only select the number {"1".InlineCode()}");
+                    }
                     else
+                    {
                         await ReplyEmbedAsync("Message Not Found",
                             $"You have to select a number between {"1".InlineCode()} and {$"{Server.JoinMessages.Count}".InlineCode()}");
+                    }
                 }
                 else
                 {
@@ -391,9 +407,13 @@ namespace Radon.Modules
             public async Task AddLeaveMessageAsync([Remainder] string message)
             {
                 if (Server.LeaveMessages.Add(message))
+                {
                     await ReplyEmbedAsync("Leavemessage Added", $"Added the leavemessage {message.InlineCode()}");
+                }
                 else
+                {
                     await ReplyEmbedAsync("Leavemessage Exists", "This leavemessage already exists");
+                }
             }
 
             [Command("remove")]
@@ -411,11 +431,15 @@ namespace Radon.Modules
                 if (Server.LeaveMessages.Count < id || id < 1)
                 {
                     if (Server.LeaveMessages.Count == 1)
+                    {
                         await ReplyEmbedAsync("Message Not Found",
                             $"You can only select the number {"1".InlineCode()}");
+                    }
                     else
+                    {
                         await ReplyEmbedAsync("Message Not Found",
                             $"You have to select a number between {"1".InlineCode()} and {$"{Server.LeaveMessages.Count}".InlineCode()}");
+                    }
                 }
                 else
                 {
@@ -636,11 +660,15 @@ namespace Radon.Modules
                 {
                     var specificSetting = (Setting)specificObject;
                     if (Server.DisabledSettings.Remove(specificSetting))
+                    {
                         await ReplyEmbedAsync("Setting Enabled",
                             $"Enabled the setting {$"{specificSetting}".ToLower().InlineCode()}");
+                    }
                     else
+                    {
                         await ReplyEmbedAsync("Already Enabled",
                             $"The setting {$"{specificSetting}".ToLower().InlineCode()} is already enabled");
+                    }
                 }
                 else
                 {
@@ -658,11 +686,15 @@ namespace Radon.Modules
                 {
                     var specificSetting = (Setting)specificObject;
                     if (Server.DisabledSettings.Add(specificSetting))
+                    {
                         await ReplyEmbedAsync("Setting Disabled",
                             $"Disabled the setting {$"{specificSetting}".ToLower().InlineCode()}");
+                    }
                     else
+                    {
                         await ReplyEmbedAsync("Already Disabled",
                             $"The setting {$"{specificSetting}".ToLower().InlineCode()} is already disabled");
+                    }
                 }
                 else
                 {
@@ -684,7 +716,10 @@ namespace Radon.Modules
             public async Task SettingsAsync()
             {
                 if (!Server.DisabledChannelSettings.ContainsKey(Context.Channel.Id))
+                {
                     Server.DisabledChannelSettings.Add(Context.Channel.Id, new HashSet<Setting>());
+                }
+
                 var channelSettings = Server.DisabledChannelSettings[Context.Channel.Id];
                 var settings = Enum.GetValues(typeof(Setting)).Cast<Setting>();
                 await ReplyEmbedAsync("Settings",
