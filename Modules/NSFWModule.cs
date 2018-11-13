@@ -101,7 +101,7 @@ namespace Radon.Modules
         [Summary("Gets a random nsfw image")]
         public async Task NsfwAsync(bool gifs = true)
         {
-            KSoftRedditPost post = await _kSoft.GetRandomNsfw(gifs);
+            KSoftRedditPost post = await _kSoft.Nsfw(gifs);
             EmbedBuilder embed = new EmbedBuilder()
                .WithTitle($"{post.Author} | {post.Title}")
                .WithUrl($"{post.Source}")

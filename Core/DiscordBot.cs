@@ -1,6 +1,5 @@
 ﻿#region
 
-using CoubSharp;
 using Discord;
 using Discord.Addons.Interactive;
 using Discord.Commands;
@@ -39,8 +38,6 @@ namespace Radon.Core
         private LavalinkManager _lavalinkManager;
         private KSoft _kSoft;
         private E621 _e621;
-        private IAuthorizationService _authService;
-        private ICoubService _coubService;
 
         public async Task InitializeAsync()
         {
@@ -50,18 +47,6 @@ namespace Radon.Core
             _httpClient = new HttpClient();
             _kSoft = new KSoft(_configuration.KsoftApiKey);
             _e621 = new E621(_configuration.E621UserAgent);
-            //_authService = new AuthorizationService(_configuration.CoubAppID, _configuration.CoubAppSecret);
-            //var urlToGetAuthorizeCode = _authService.AuthorizationCodeUrlAsync("http://coub.com/oauth/token", new string[]
-            //{
-            //    AuthorizationService.Scope.LoggedIn,
-            //    AuthorizationService.Scope.Recoub,
-            //    AuthorizationService.Scope.Create,
-            //    AuthorizationService.Scope.ChannelEdit,
-            //    AuthorizationService.Scope.Follow
-            //});
-            //var token = await _authService.AuthorizeTokenAsync("http://coub.com/oauth/authorize", urlToGetAuthorizeCode);
-
-            //_coubService = new CoubService(token.AccessToken);
             _client = new DiscordShardedClient(new DiscordSocketConfig
             {
                 AlwaysDownloadUsers = true,
@@ -96,7 +81,6 @@ namespace Radon.Core
                 .AddSingleton(_lavalinkManager)
                 .AddSingleton(_kSoft)
                 .AddSingleton(_e621)
-                //.AddSingleton(_coubService)
                 .AddSingleton(new Giphy(_configuration.GiphyApiKey))
                 .AddSingleton<StatisticsService>()
                 .AddSingleton<Random>()

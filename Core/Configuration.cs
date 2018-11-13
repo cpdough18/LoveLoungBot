@@ -16,7 +16,7 @@ namespace Radon.Core
 
         [JsonProperty("BotToken")] public readonly string BotToken = "";
 
-        [JsonProperty("DatabaseConnectionString")] public readonly string DatabaseConnectionString = "http://127.0.0.1:8080";
+        [JsonProperty("DatabaseConnectionString")] public readonly string DatabaseConnectionString = "";
 
         [JsonProperty("DefaultJoinMessage")] public readonly string DefaultJoinMessage = "";
 
@@ -38,7 +38,7 @@ namespace Radon.Core
 
         [JsonProperty("e621UserAgent")] public readonly string E621UserAgent = "";
 
-        [JsonProperty("OwnerIds")] public readonly ulong[] OwnerIds = { 1234567890, 1234567890 };
+        [JsonProperty("OwnerIds")] public readonly ulong[] OwnerIds = { 123456789, 123456789 };
 
         [JsonProperty("ShardCount")] public readonly int ShardCount = 1;
 

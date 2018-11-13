@@ -37,9 +37,9 @@ namespace Radon.Modules
         [RequireUserPermission(GuildPermission.BanMembers)]
         [RequireBotPermission(GuildPermission.BanMembers)]
         [Summary("Submits global ban request to the KSoft API")]
-        public async Task GlobalBanAsync([CheckBotHierarchy] [CheckUserHierarchy] IGuildUser user, string proof, bool appealable, [Remainder] string reason)
+        public async Task GlobalBanAsync([CheckBotHierarchy] [CheckUserHierarchy] IGuildUser user, string proof, [Remainder] string reason)
         {
-            var result = await _kSoft.AddBan((int)user.Id, reason, proof, (int)Context.Message.Author.Id, appealPossible: appealable);
+            var result = await _kSoft.AddBan((uint?)user.Id, reason, proof, (int)Context.Message.Author.Id);
 
             EmbedBuilder embed = new EmbedBuilder()
                 .WithTitle("User reported")
@@ -179,7 +179,7 @@ namespace Radon.Modules
         {
             var logItem = _serverService.AddLogItem(Server, ActionType.Warn, reason, Context.User.Id, user.Id);
 
-            
+
 
             await _logService.SendLog(Context.Guild, "User Warned",
                $"Responsible User ❯ {Context.User.Mention}\nUser ❯ {user.Mention} ({user.Nickname ?? user.Username}#{user.Discriminator})\nReason ❯ {reason ?? $"none, {Context.User.Mention} use {$"reason {logItem.LogId} <reason>".InlineCode()}"}\nId ❯ {logItem.LogId}",

@@ -122,7 +122,7 @@ namespace Radon.Modules
         [Summary("Gets a meme")]
         public async Task MemeAsync()
         {
-            var data = await _kSoft.GetRandomMeme();
+            var data = await _kSoft.Meme();
 
             EmbedBuilder embed = new EmbedBuilder()
                 .WithTitle($"{data.Title}")
@@ -140,7 +140,7 @@ namespace Radon.Modules
         [Summary("Gets a wikihow article")]
         public async Task WikiHowAsync()
         {
-            var wh = _kSoft.GetRandomWikihow().Result;
+            var wh = _kSoft.Wikihow().Result;
             EmbedBuilder embed = new EmbedBuilder()
                 .WithTitle($"{wh.Title}")
                 .WithUrl($"{wh.ArticleUrl}")
@@ -179,7 +179,7 @@ namespace Radon.Modules
         [Summary("Returns random image from r/aww")]
         public async Task AwwAsync()
         {
-            var aww = _kSoft.GetRandomAww().Result;
+            var aww = _kSoft.Aww().Result;
             EmbedBuilder embed = new EmbedBuilder()
                 .WithTitle($"{aww.Subreddit} | {aww.Title}")
                 .WithUrl($"{aww.Source}")
@@ -195,7 +195,7 @@ namespace Radon.Modules
         [Summary("Gets a post from a subreddit")]
         public async Task SubredditAsync(string subreddit)
         {
-            var post = _kSoft.GetRandomSubredditImage().Result;
+            var post = _kSoft.SubredditImage().Result;
             EmbedBuilder embed = new EmbedBuilder()
                 .WithTitle($"{post.Subreddit} | {post.Title}")
                 .WithUrl($"{post.Source}")

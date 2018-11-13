@@ -13,8 +13,7 @@ namespace Radon.Services.External
         private readonly LavalinkManager _lavalinkManager;
         public SharplinkService(Configuration configuration, LavalinkManager lavalinkManager) => _lavalinkManager = lavalinkManager;
 
-        public List<SharplinkQueue> Queue = new List<SharplinkQueue>();
-
+        public Queue<SharplinkQueue> queue;
 
         public async Task<string> SearchAsync(string query)
         {
@@ -50,9 +49,9 @@ namespace Radon.Services.External
 
         public void AddToQueue(ulong guildID, LavalinkTrack track)
         {
-            var uwu = new SharplinkQueue(guildID, track);
-            Queue.Add(uwu);
-            Console.WriteLine(Queue.ToArray().ToString());
+            SharplinkQueue queueObject = new SharplinkQueue(guildID, track);
+            queue.Enqueue(queueObject);
+            Console.WriteLine(string.Join("\n", queue.ToList()));
         }
         public async Task StopAsync(ulong guildID) => await _lavalinkManager.LeaveAsync(guildID);
         public async Task JoinAsync(IVoiceChannel voiceChannel) => await _lavalinkManager.JoinAsync(voiceChannel);
